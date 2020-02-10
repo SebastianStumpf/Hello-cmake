@@ -1,7 +1,12 @@
-# GCC pipeline
+# GCC pipeline 
 
 trigger:
 - master
+- develop
+- release/*
+- feature/*
+- bugfix/*
+- hotfix/*
 
 pool:
   vmImage: 'ubuntu-latest'
