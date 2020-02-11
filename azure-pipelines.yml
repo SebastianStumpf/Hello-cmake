@@ -1,0 +1,41 @@
+# GCC pipeline 
+
+trigger:
+- master
+- develop
+- release/*
+- feature/*
+- bugfix/*
+- hotfix/*
+
+jobs:
+- job: gcc7
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - bash: |
+      export CC=gcc-7
+      export CXX=g++-7
+      mkdir build_release
+      cd build_release
+      cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release
+    displayName: 'Configure Release'
+  - bash: |
+      cd build_release
+      make
+    displayName: 'Build Release'
+  - bash: |
+      cd build_release
+      ./Exe # ctest
+    displayName: 'Test Release'
+
+- job: gcc9
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - script: |
+      echo Hello
+      echo World
+    displayName: 'Hello World'
+
+
