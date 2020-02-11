@@ -8,14 +8,34 @@ trigger:
 - bugfix/*
 - hotfix/*
 
-pool:
-  vmImage: 'ubuntu-latest'
+jobs:
+- job: gcc7
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - bash: |
+      export CC=gcc-7
+      export CXX=g++-7
+      mkdir build_release
+      cd build_release
+      cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release
+    displayName: 'Configure Release'
+  - bash: |
+      cd build_release
+      make
+    displayName: 'Build Release'
+  - bash: |
+      cd build_release
+      ./Exe # ctest
+    displayName: 'Test Release'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- job: gcc9
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - script: |
+      echo Hello
+      echo World
+    displayName: 'Hello World'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+
