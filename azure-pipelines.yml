@@ -11,10 +11,14 @@ pr:
 jobs:
 # GCC7 build pipeline
 - job: gcc7
+  strategy:
+    matrix:
+      ubuntu-18.04:
+        imageName: 'ubuntu-18.04'
+      ubuntu-16.04:
+        imageName: 'ubuntu-16.04'
   pool:
-    vmImage: | 
-      'ubuntu-18.04'
-      'ubuntu-16.04'
+    vmImage: $(imageName)
   steps:
   - bash: |
       export CC=gcc-7
@@ -53,10 +57,14 @@ jobs:
 
 # GCC9 build pipeline
 - job: gcc9
+  strategy:
+    matrix:
+      ubuntu-18.04:
+        imageName: 'ubuntu-18.04'
+      ubuntu-16.04:
+        imageName: 'ubuntu-16.04'
   pool:
-    vmImage: | 
-      'ubuntu-18.04'
-      'ubuntu-16.04'
+    vmImage: $(imageName)
   steps:
   - bash: |
       export CC=gcc-9
