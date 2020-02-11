@@ -21,6 +21,9 @@ jobs:
     vmImage: $(imageName)
   steps:
   - bash: |
+      sudo apt -y install gcc-7 g++-7 gcc-9 g++-9 
+    displayName: 'Install Dependencies'
+  - bash: |
       export CC=gcc-7
       export CXX=g++-7
       mkdir build_release
@@ -66,6 +69,9 @@ jobs:
   pool:
     vmImage: $(imageName)
   steps:
+  - bash: |
+      sudo apt -y install gcc-7 g++-7 gcc-9 g++-9 
+    displayName: 'Install Dependencies'
   - bash: |
       export CC=gcc-9
       export CXX=g++-9
