@@ -26,7 +26,7 @@ jobs:
     displayName: 'Build Release'
   - bash: |
       cd build_release
-      ./Exe # ctest
+      ./hello_test # ctest dummy
     displayName: 'Test Release'
 
 - job: gcc9
