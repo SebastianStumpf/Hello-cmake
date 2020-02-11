@@ -9,55 +9,65 @@ pr:
 - develop
 
 stages:
-- stage: UnixBuildTest
-  displayName: 'Unix Build & Test'
+- stage: Build
+  displayName: 'Unix Build'
   jobs:
-    - job:
-      strategy:
-        matrix:
-          gcc7:
-            compilerVersion: '7'
-          gcc9:
-            compilerVersion: '9'
-          Release:
-            buildType: 'Release'
-          Debug:
-            buildType: 'Debug'
-          ubuntu-18.04:
-            imageName: 'ubuntu-18.04'
-          ubuntu-16.04:
-            imageName: 'ubuntu-16.04'
-      steps:
-      - bash: |
-          sudo apt -y install gcc-$(compilerVersion) g++-$(compilerVersion)
-        displayName: 'Install Dependencies'
+  - job:
+    strategy:
+      matrix:
+        agent-ubuntu-16.04--compilerVersion-7--buildType-Release:
+          agent: 'ubuntu-16.04'
+          compilerVersion: '9'
+          buildType: 'Release'
+    pool:
+      vmImage: $(agent)
+    steps:
+    - task: CMake@1
+      inputs:
+        workingDirectory: build
+        cmakeArgs: .. -DCC=gcc-$(compilerVersion) -DCXX=g++-$(compilerVersion) -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=$(buildType)
 
-      - bash: |
-          export CC=gcc-$(compilerVersion)
-          export CXX=g++-$(compilerVersion)
-          mkdir build_gcc$(compilerVersion)_$(buildType)
-          cd build_gcc$(compilerVersion)_$(buildType)
-          cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=$(buildType)
-        displayName: 'Configure'
+    - bash: |
+        cd build
+        make
+      displayName: 'Make'
 
-      - bash: |
-          cd build_gcc$(compilerVersion)_$(buildType)
-          make
-        displayName: 'Build'
-        
-      - bash: |
-          cd build_gcc$(compilerVersion)_$(buildType)
-          ./hello_test # ctest dummy
-        displayName: 'Test'
-        
-- stage: UnixDeploy
+    - publish: build
+      artifact: build_$(agent)_gcc$(compilerVersion)_$(buildType)
+
+- stage: Test
+  displayName: 'Unix Test'
+  dependsOn: Build
+  jobs:
+  - job:
+    strategy:
+      matrix:
+        agent-ubuntu-16.04--compilerVersion-7--buildType-Release:
+          agent: 'ubuntu-16.04'
+          compilerVersion: '9'
+          buildType: 'Release'
+    pool:
+      vmImage: $(agent)
+    steps:
+    - download: current
+      artifact: build_$(agent)_gcc$(compilerVersion)_$(buildType)
+
+    - bash: |
+        pwd && ls -alr
+        cd $(Pipeline.Workspace)/build_$(agent)_gcc$(compilerVersion)_$(buildType)
+        pwd && ls -alr
+        chmod -R a+x ./hello_test   # artifacts do not preserve file permissions (https://github.com/microsoft/azure-pipelines-tasks/issues/6364)
+        ./hello_test                # ctest dummy runnable
+      displayName: 'Test'
+
+- stage: Deploy
   displayName: 'Unix Deploy'
-  dependsOn: UnixBuildTest
+  dependsOn: Build
   jobs:
-    - job: 
-      steps:
-      - bash:
-          echo 'Deployment still to be defined'
+  - job: 
+    steps:
+    - bash:
+        echo 'Deployment still to be defined'
 
 
 
