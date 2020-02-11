@@ -1,15 +1,22 @@
+# trigger on push
 trigger:
-- release/*
-- feature/*
-- bugfix/*
-- hotfix/*
-
+  batch: true
+  branches:
+    include:
+      - release/*
+      - feature/*
+      - bugfix/*
+      - hotfix/*
+      
+# trigger on pull request
 pr:
-- master
-- develop
+  branches:
+    include:
+    - master
+    - develop
 
 jobs:
-# GCC7 build pipeline
+# GCC7 build pipeline asd
 - job: gcc7
   strategy:
     matrix:
