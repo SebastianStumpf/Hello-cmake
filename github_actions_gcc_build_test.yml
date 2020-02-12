@@ -1,0 +1,133 @@
+name: CPU-GCC-Build-and-Test
+
+on:
+  push:
+    branches:
+        - master
+        - develop
+        - release/*
+
+jobs:
+  GCC-7:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v2
+
+    - name: Configure Release
+      run: |
+        export CC=gcc-7
+        export CXX=g++-7
+        mkdir build_release
+        cd build_release
+        cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release
+    - name: Build Release
+      run: |
+        cd build_release
+        make
+    - name: Test Release
+      run: |
+        cd build_release
+        ./Exe # ctest
+
+    - name: Configure Debug
+      run: |
+        export CC=gcc-7
+        export CXX=g++-7
+        mkdir build_debug
+        cd build_debug
+        cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Debug
+    - name: Build Debug
+      run: |
+        cd build_debug
+        make
+    - name: Test Debug
+      run: |
+        cd build_debug
+        ./Exe
+
+  GCC-8:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v2
+
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+        sudo apt install g++-8
+
+    - name: Configure Release
+      run: |
+        export CC=gcc-8
+        export CXX=g++-8
+        mkdir build_release
+        cd build_release
+        cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release
+    - name: Build Release
+      run: |
+        cd build_release
+        make
+    - name: Test Release
+      run: |
+        cd build_release
+        ./Exe
+
+    - name: Configure Debug
+      run: |
+        export CC=gcc-8
+        export CXX=g++-8
+        mkdir build_debug
+        cd build_debug
+        cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Debug
+    - name: Build Debug
+      run: |
+        cd build_debug
+        make
+    - name: Test Debug
+      run: |
+        cd build_debug
+        ./Exe
+
+  GCC-9:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v2
+
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+        sudo apt install g++-9
+
+    - name: Configure Release
+      run: |
+        export CC=gcc-9
+        export CXX=g++-9
+        mkdir build_release
+        cd build_release
+        cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release
+    - name: Build Release
+      run: |
+        cd build_release
+        make
+    - name: Test Release
+      run: |
+        cd build_release
+        ./Exe
+
+    - name: Configure Debug
+      run: |
+        export CC=gcc-9
+        export CXX=g++-9
+        mkdir build_debug
+        cd build_debug
+        cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Debug
+    - name: Build Debug
+      run: |
+        cd build_debug
+        make
+    - name: Test Debug
+      run: |
+        cd build_debug
+        ./Exe

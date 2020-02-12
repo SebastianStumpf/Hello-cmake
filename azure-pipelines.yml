@@ -1,117 +1,73 @@
-# trigger on push
 trigger:
-  batch: true
-  branches:
-    include:
-      - release/*
-      - feature/*
-      - bugfix/*
-      - hotfix/*
-      
-# trigger on pull request
+- release/*
+- feature/*
+- bugfix/*
+- hotfix/*
+
 pr:
-  branches:
-    include:
-    - master
-    - develop
+- master
+- develop
 
-jobs:
-# GCC7 build pipeline asd
-- job: gcc7
-  strategy:
-    matrix:
-      ubuntu-18.04:
-        imageName: 'ubuntu-18.04'
-      ubuntu-16.04:
-        imageName: 'ubuntu-16.04'
-  pool:
-    vmImage: $(imageName)
-  steps:
-  - bash: |
-      sudo apt -y install gcc-7 g++-7 gcc-9 g++-9 
-    displayName: 'Install Dependencies'
-  - bash: |
-      export CC=gcc-7
-      export CXX=g++-7
-      mkdir build_release
-      cd build_release
-      cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release
-    displayName: 'Configure Release'
-  - bash: |
-      cd build_release
-      make
-    displayName: 'Build Release'
-  - bash: |
-      cd build_release
-      ./hello_test # ctest dummy
-    displayName: 'Test Release'
-  - bash: |
-      export CC=gcc-7
-      export CXX=g++-7
-      mkdir build_debug
-      cd build_debug
-      cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Debug
-    displayName: 'Configure Debug'
-  - bash: |
-      cd build_debug
-      make
-    displayName: 'Build Debug'
-  - bash: |
-      cd build_debug
-      ./hello_test # ctest dummy
-    displayName: 'Test Debug'
-  - bash: |
-      rm -rf build_debug
-      rm -rf build_release
-    displayName: 'Cleanup'
+stages:
+- stage: Build
+  displayName: 'Unix Build'
+  jobs:
+  - job:
+    strategy:
+      matrix:
+        agent-ubuntu-16.04--compilerVersion-7--buildType-Release:
+          agent: 'ubuntu-16.04'
+          compilerVersion: '9'
+          buildType: 'Release'
+    pool:
+      vmImage: $(agent)
+    steps:
+    - task: CMake@1
+      inputs:
+        workingDirectory: build
+        cmakeArgs: .. -DCC=gcc-$(compilerVersion) -DCXX=g++-$(compilerVersion) -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=$(buildType)
 
-# GCC9 build pipeline
-- job: gcc9
-  strategy:
-    matrix:
-      ubuntu-18.04:
-        imageName: 'ubuntu-18.04'
-      ubuntu-16.04:
-        imageName: 'ubuntu-16.04'
-  pool:
-    vmImage: $(imageName)
-  steps:
-  - bash: |
-      sudo apt -y install gcc-7 g++-7 gcc-9 g++-9 
-    displayName: 'Install Dependencies'
-  - bash: |
-      export CC=gcc-9
-      export CXX=g++-9
-      mkdir build_release
-      cd build_release
-      cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release
-    displayName: 'Configure Release'
-  - bash: |
-      cd build_release
-      make
-    displayName: 'Build Release'
-  - bash: |
-      cd build_release
-      ./hello_test # ctest dummy
-    displayName: 'Test Release'
-  - bash: |
-      export CC=gcc-9
-      export CXX=g++-9
-      mkdir build_debug
-      cd build_debug
-      cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Debug
-    displayName: 'Configure Debug'
-  - bash: |
-      cd build_debug
-      make
-    displayName: 'Build Debug'
-  - bash: |
-      cd build_debug
-      ./hello_test # ctest dummy
-    displayName: 'Test Debug'
-  - bash: |
-      rm -rf build_debug
-      rm -rf build_release
-    displayName: 'Cleanup'
+    - bash: |
+        cd build
+        make
+      displayName: 'Make'
+
+    - publish: build
+      artifact: build_$(agent)_gcc$(compilerVersion)_$(buildType)
+
+- stage: Test
+  displayName: 'Unix Test'
+  dependsOn: Build
+  jobs:
+  - job:
+    strategy:
+      matrix:
+        agent-ubuntu-16.04--compilerVersion-7--buildType-Release:
+          agent: 'ubuntu-16.04'
+          compilerVersion: '9'
+          buildType: 'Release'
+    pool:
+      vmImage: $(agent)
+    steps:
+    - download: current
+      artifact: build_$(agent)_gcc$(compilerVersion)_$(buildType)
+
+    - bash: |
+        pwd && ls -alr
+        cd $(Pipeline.Workspace)/build_$(agent)_gcc$(compilerVersion)_$(buildType)
+        pwd && ls -alr
+        chmod -R a+x ./hello_test   # artifacts do not preserve file permissions (https://github.com/microsoft/azure-pipelines-tasks/issues/6364)
+        ./hello_test                # ctest dummy runnable
+      displayName: 'Test'
+
+- stage: Deploy
+  displayName: 'Unix Deploy'
+  dependsOn: Build
+  jobs:
+  - job: 
+    steps:
+    - bash:
+        echo 'Deployment still to be defined'
+
 
 
