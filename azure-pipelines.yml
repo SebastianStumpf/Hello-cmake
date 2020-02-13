@@ -32,8 +32,10 @@ stages:
         make
       displayName: 'Make'
 
-    - publish: build
-      artifact: build_$(agent)_gcc$(compilerVersion)_$(buildType)
+    - task: PublishPipelineArtifact@1
+      inputs:
+        path: build
+        artifact: build_$(agent)_gcc$(compilerVersion)_$(buildType)
 
 - stage: Test
   displayName: 'Unix Test'
@@ -49,8 +51,9 @@ stages:
     pool:
       vmImage: $(agent)
     steps:
-    - download: current
-      artifact: build_$(agent)_gcc$(compilerVersion)_$(buildType)
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: build_$(agent)_gcc$(compilerVersion)_$(buildType)
 
     - bash: |
         pwd && ls -alr
