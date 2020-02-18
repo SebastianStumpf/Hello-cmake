@@ -1,0 +1,106 @@
+trigger:
+- release/*
+- feature/*
+- bugfix/*
+- hotfix/*
+
+pr:
+- master
+- develop
+
+name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
+variables: 
+  ACE_ROOT: '$(Pipeline.Workspace)/ACE/ACE_wrapper'
+
+stages:
+- stage: Build
+  displayName: 'Build for Windows'
+  jobs:
+
+  - job:
+    strategy:
+      matrix:
+        agent-vs2017-win2016--buildType-Release:
+          agent: 'vs2017-win2016'
+          buildType: 'Release'
+    pool:
+      vmImage: $(agent)
+    steps:
+    - task: CMake@1
+      inputs:
+        workingDirectory: build   # relative to $(System.DefaultWorkingDirectory)
+        cmakeArgs: .. -DCMAKE_VERBOSE_MAKEFILE=ON
+    - task: VSBuild@1
+      inputs:
+        solution: '**\*.sln'
+        vsVersion: '15.0'
+        platform: 'x64'
+        configuration: '$(buildType)'
+
+    - publish: build
+      displayName: 'Publish Build Artifacts'
+      artifact: build_$(agent)_$(buildType)
+
+- stage: Test
+  displayName: 'Run Tests against Build for Windows'
+  dependsOn: Build
+  jobs:
+  - job:
+    strategy:
+      matrix:
+        agent-vs2017-win2016--buildType-Release:
+          agent: 'vs2017-win2016'
+          buildType: 'Release'
+    pool:
+      vmImage: $(agent)
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Load Build Artifacts to $(System.DefaultWorkingDirectory)/build'
+      inputs:
+        artifact: build_$(agent)_$(buildType)
+        path: '$(System.DefaultWorkingDirectory)/build'
+
+    - bash: |
+        cd build
+        mkdir test_results
+        chmod -R a+x ./hello_test             # artifacts do not preserve file permissions (https://github.com/microsoft/azure-pipelines-tasks/issues/6364)
+        ./hello_test >> test_results/run.log   # ctest dummy runnable
+      displayName: 'Run Dummy Test'
+    
+    - publish: build/test_results
+      displayName: 'Publish Test Artifacts'
+      artifact: test_$(agent)_gcc$(compilerVersion)_$(buildType)
+
+- stage: Docker
+  displayName: 'Build and Push Docker Images for Unix'
+  dependsOn: Build
+  jobs:
+  - job: 
+    strategy:
+      matrix:
+        agent-vs2017-win2016--buildType-Release:
+          agent: 'vs2017-win2016'
+          buildType: 'Release'
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Copy hello_cmake to $(System.DefaultWorkingDirectory)/docker'
+      inputs:
+        artifact: 'build_$(agent)_gcc$(compilerVersion)_$(buildType)'
+        itemPattern: 'hello_cmake'
+        targetPath: '$(System.DefaultWorkingDirectory)/docker'
+    - bash: | 
+        cd docker
+        echo "FROM scratch
+        COPY hello_cmake /
+        CMD ['/hello_cmake']" >> Dockerfile
+      displayName: 'Create Dummy Docker File'
+    - task: Docker@2
+      displayName: 'Build Docker Image for Unix'
+      inputs:
+        command: 'build'
+        Dockerfile: 'docker/Dockerfile'
+
+    - publish: docker
+      displayName: 'Publish Docker Artifacts'
+      artifact: docker_$(agent)_gcc$(compilerVersion)_$(buildType)
