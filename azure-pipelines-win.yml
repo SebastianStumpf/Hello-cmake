@@ -35,8 +35,7 @@ stages:
       inputs:
         solution: '**\*.sln'
         vsVersion: '15.0'
-        platform: 'x64'
-        configuration: '$(buildType)'
+        configuration: '/p:Configuration=$(buildType)'
 
     - publish: build
       displayName: 'Publish Build Artifacts'
