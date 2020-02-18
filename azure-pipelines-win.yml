@@ -85,7 +85,7 @@ stages:
     - task: DownloadPipelineArtifact@2
       displayName: 'Copy hello_cmake to $(System.DefaultWorkingDirectory)/docker'
       inputs:
-        artifact: 'build_$(agent)_gcc$(compilerVersion)_$(buildType)'
+        artifact: 'build_$(agent)_$(buildType)'
         itemPattern: '**/hello_cmake'
         targetPath: '$(System.DefaultWorkingDirectory)/docker'
     - bash: | 
@@ -102,4 +102,4 @@ stages:
 
     - publish: docker
       displayName: 'Publish Docker Artifacts'
-      artifact: docker_$(agent)_gcc$(compilerVersion)_$(buildType)
+      artifact: docker_$(agent)_$(buildType)
