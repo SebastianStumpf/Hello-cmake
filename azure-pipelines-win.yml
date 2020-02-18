@@ -67,9 +67,9 @@ stages:
         $(buildType)/hello_test >> test_results/run.log   # ctest dummy runnable
       displayName: 'Run Dummy Test'
     
-    - publish: $(buildType)/test_results
+    - publish: build/test_results
       displayName: 'Publish Test Artifacts'
-      artifact: test_$(agent)_gcc$(compilerVersion)_$(buildType)
+      artifact: test_$(agent)_$(buildType)
 
 - stage: Docker
   displayName: 'Build and Push Docker Images for Windows'
