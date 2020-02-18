@@ -63,16 +63,16 @@ stages:
     - bash: |
         cd build
         mkdir test_results
-        chmod -R a+x ./hello_test             # artifacts do not preserve file permissions (https://github.com/microsoft/azure-pipelines-tasks/issues/6364)
-        ./hello_test >> test_results/run.log   # ctest dummy runnable
+        chmod -R a+x $(buildType)/hello_test              # artifacts do not preserve file permissions (https://github.com/microsoft/azure-pipelines-tasks/issues/6364)
+        $(buildType)/hello_test >> test_results/run.log   # ctest dummy runnable
       displayName: 'Run Dummy Test'
     
-    - publish: build/test_results
+    - publish: $(buildType)/test_results
       displayName: 'Publish Test Artifacts'
       artifact: test_$(agent)_gcc$(compilerVersion)_$(buildType)
 
 - stage: Docker
-  displayName: 'Build and Push Docker Images for Unix'
+  displayName: 'Build and Push Docker Images for Windows'
   dependsOn: Build
   jobs:
   - job: 
@@ -86,7 +86,7 @@ stages:
       displayName: 'Copy hello_cmake to $(System.DefaultWorkingDirectory)/docker'
       inputs:
         artifact: 'build_$(agent)_gcc$(compilerVersion)_$(buildType)'
-        itemPattern: 'hello_cmake'
+        itemPattern: '**/hello_cmake'
         targetPath: '$(System.DefaultWorkingDirectory)/docker'
     - bash: | 
         cd docker
@@ -95,7 +95,7 @@ stages:
         CMD ['/hello_cmake']" >> Dockerfile
       displayName: 'Create Dummy Docker File'
     - task: Docker@2
-      displayName: 'Build Docker Image for Unix'
+      displayName: 'Build Docker Image for Windows'
       inputs:
         command: 'build'
         Dockerfile: 'docker/Dockerfile'
