@@ -60,6 +60,7 @@ stages:
         artifact: build_$(agent)_$(buildType)
         path: '$(System.DefaultWorkingDirectory)/build'
 
+    # bash also works on Windows, you can even execute .exe files and omit the file endings
     - bash: |
         cd build
         mkdir test_results
@@ -86,13 +87,13 @@ stages:
       displayName: 'Copy hello_cmake to $(System.DefaultWorkingDirectory)/docker'
       inputs:
         artifact: 'build_$(agent)_$(buildType)'
-        itemPattern: '**/hello_cmake'
+        itemPattern: '**/hello_cmake.exe'
         targetPath: '$(System.DefaultWorkingDirectory)/docker'
     - bash: | 
         cd docker
         echo "FROM scratch
-        COPY hello_cmake /
-        CMD ['/hello_cmake']" >> Dockerfile
+        COPY hello_cmake.exe /
+        CMD ['/hello_cmake.exe']" >> Dockerfile
       displayName: 'Create Dummy Docker File'
     - task: Docker@2
       displayName: 'Build Docker Image for Windows'
